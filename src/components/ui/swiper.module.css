@@ -1,0 +1,13 @@
+/* Swiper Tweaks */
+
+.root :global(.swiper-pagination-bullet-active) {
+    background: #000 !important;
+}
+  
+  .root :global(.swiper-pagination-fraction),
+  .root :global(.swiper-pagination-custom),
+  .root :global(.swiper-horizontal > .swiper-pagination-bullets),
+  .root :global(.swiper-pagination-bullets.swiper-pagination-horizontal) {
+    left: 50% !important;
+    width: unset !important;
+}
