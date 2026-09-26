@@ -1,6 +1,10 @@
 "use client";
 
-import { useForm, ValidationError } from "@formspree/react";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
+import { useRef, useState } from "react";
+
+const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+    || (process.env.NODE_ENV === "development" ? "1x00000000000000000000AA" : "");
 
 type TextField = {
     type: "text" | "email" | "tel" | "textarea";
@@ -20,10 +24,55 @@ export type CafField = TextField | CheckField;
 
 const inputClass = "mt-1 w-full rounded-sm border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900";
 
-export function CafForm({ fields, id, formId }: { fields: CafField[]; id?: string; formId?: string }) {
-    const [state, handleSubmit] = useForm(formId || process.env.NEXT_PUBLIC_FORMSPREE_FORM_ID || "x");
+export function CafForm({ fields, id, source = "Contact" }: { fields: CafField[]; id?: string; source?: string }) {
+    const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+    const [error, setError] = useState("");
+    const [captchaToken, setCaptchaToken] = useState("");
+    const turnstileRef = useRef<TurnstileInstance>(undefined);
 
-    if (state.succeeded) {
+    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        if (!captchaToken) {
+            setError("Complete the captcha.");
+            setStatus("error");
+            return;
+        }
+
+        setStatus("sending");
+        setError("");
+
+        const data = new FormData(event.currentTarget);
+        const payload: Record<string, string | string[]> = {};
+        for (const field of fields) {
+            if (field.type === "checks") {
+                payload[field.name] = data.getAll(field.name).map(String);
+            } else {
+                payload[field.name] = String(data.get(field.name) ?? "");
+            }
+        }
+
+        try {
+            const response = await fetch("/api/contact", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ source, fields: payload, captchaToken }),
+            });
+            const body = await response.json().catch(() => null);
+            if (!response.ok) {
+                setCaptchaToken("");
+                turnstileRef.current?.reset();
+                setError(typeof body?.error === "string" ? body.error : "Could not send your message.");
+                setStatus("error");
+                return;
+            }
+            setStatus("sent");
+        } catch {
+            setError("Could not send your message.");
+            setStatus("error");
+        }
+    }
+
+    if (status === "sent") {
         return <p className="rounded-md bg-white/10 px-4 py-6 text-center text-white">Thank you. Your message has been sent.</p>;
     }
 
@@ -56,14 +105,26 @@ export function CafForm({ fields, id, formId }: { fields: CafField[]; id?: strin
                             ) : (
                                 <input id={field.name} name={field.name} type={field.type} required={field.required} className={inputClass} />
                             )}
-                            <ValidationError prefix={field.label} field={field.name} errors={state.errors} className="mt-1 text-xs text-red-200" />
                         </div>
                     );
                 })}
             </div>
+            {turnstileSiteKey ? (
+                <Turnstile
+                    ref={turnstileRef}
+                    siteKey={turnstileSiteKey}
+                    options={{ theme: "dark" }}
+                    onSuccess={setCaptchaToken}
+                    onExpire={() => setCaptchaToken("")}
+                    onError={() => setCaptchaToken("")}
+                />
+            ) : (
+                <p className="text-sm text-red-200">Captcha is unavailable.</p>
+            )}
+            {error ? <p className="text-sm text-red-200">{error}</p> : null}
             <button
                 type="submit"
-                disabled={state.submitting}
+                disabled={status === "sending" || !captchaToken}
                 className="w-full rounded-sm bg-[#e10600] py-3 text-sm font-semibold text-white hover:bg-[#c10500] disabled:opacity-70"
             >
                 Send

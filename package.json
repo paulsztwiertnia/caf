@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@formspree/react": "^3.0.0",
+    "@marsidev/react-turnstile": "^1.6.1",
     "@react-email/components": "^0.5.7",
     "@react-email/render": "^1.4.0",
     "@szhsin/react-accordion": "^1.4.1",
@@ -22,6 +23,7 @@
     "next": "^15.4.11",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "resend": "^6.30.0",
     "sharp": "^0.34.5",
     "swiper": "^12.0.3",
     "tailwind-merge": "^3.3.1"

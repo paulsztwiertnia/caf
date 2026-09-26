@@ -70,7 +70,7 @@ export default function GetInvolved() {
                 <NavyCard id="getinvolved" className="mx-auto mt-8 max-w-5xl">
                     <h3 className="text-center text-lg font-semibold">Fill Out the Form and Get Involved With the CAF today!</h3>
                     <div className="mt-6">
-                        <CafForm fields={involvedFields} />
+                        <CafForm fields={involvedFields} source="Get involved" />
                     </div>
                 </NavyCard>
             </section>
