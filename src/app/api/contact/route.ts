@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const TO = "sztwiertnia.paul@gmail.com";
+const TO = "cafreception@gmail.com";
 const FROM = "Canadian Arab Federation <contact@canadianarabsfederation.com>";
 
 const MAX_FIELD = 5000;
